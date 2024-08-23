@@ -3,7 +3,7 @@ import { Routes, Route, createSearchParams, useSearchParams, useNavigate } from 
 import { useDispatch, useSelector } from 'react-redux'
 import 'reactjs-popup/dist/index.css'
 import { fetchMovies } from './data/moviesSlice'
-import { ENDPOINT_SEARCH, ENDPOINT_DISCOVER, ENDPOINT, API_KEY } from './constants'
+import { ENDPOINT_SEARCH, ENDPOINT_DISCOVER, ENDPOINT } from './constants'
 import Header from './components/Header'
 import Movies from './components/Movies'
 import Starred from './components/Starred'
@@ -18,7 +18,7 @@ const App = () => {
   const dispatch = useDispatch()
   const [searchParams, setSearchParams] = useSearchParams()
   const searchQuery = searchParams.get('search')
-  const [videoKey, setVideoKey] = useState()
+  const [videoKey, setVideoKey] = useState(false)
   const [isOpen, setOpen] = useState(false)
   const navigate = useNavigate()
   
@@ -44,10 +44,10 @@ const App = () => {
   }
 
   const getMovies = () => {
-    if (searchQuery) {
-        dispatch(fetchMovies(`${ENDPOINT_SEARCH}&query=`+searchQuery))
+    if (!searchQuery) {
+      dispatch(fetchMovies(ENDPOINT_DISCOVER))
     } else {
-        dispatch(fetchMovies(ENDPOINT_DISCOVER))
+      dispatch(fetchMovies(`${ENDPOINT_SEARCH}&query=`+searchQuery))
     }
   }
 
@@ -58,8 +58,8 @@ const App = () => {
   }
 
   const getMovie = async (id) => {
-    const URL = `${ENDPOINT}/movie/${id}?api_key=${API_KEY}&append_to_response=videos`
-
+    const URL = `${ENDPOINT}/movie/${id}?api_key=${process.env.REACT_APP_API_KEY}&append_to_response=videos`
+    console.log(URL)
     setVideoKey(null)
     const videoData = await fetch(URL)
       .then((response) => response.json())
