@@ -1,6 +1,5 @@
 import React from 'react'
 import PropTypes from 'prop-types';
-import YouTubePlayer from 'react-player/youtube';
 import TrailerContent from './TrailerContent';
 
 

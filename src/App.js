@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { Routes, Route, createSearchParams, useSearchParams, useNavigate } from "react-router-dom"
+import { useCallback, useEffect, useState } from 'react'
+import { Routes, Route, createSearchParams, useSearchParams, useNavigate, useLocation } from "react-router-dom"
 import { useDispatch, useSelector } from 'react-redux'
 import 'reactjs-popup/dist/index.css'
 import { fetchMovies } from './data/moviesSlice'
@@ -21,12 +21,9 @@ const App = () => {
   const [videoKey, setVideoKey] = useState(false)
   const [isOpen, setOpen] = useState(false)
   const navigate = useNavigate()
+  const location = useLocation();
 
   const closeModal = () => setOpen(false)
-
-  const closeCard = () => {
-
-  }
 
   const getSearchResults = (query) => {
     if (query !== '') {
@@ -39,51 +36,59 @@ const App = () => {
   }
 
   const searchMovies = (query) => {
-    navigate('/')
+    if (location.pathname !== '/') {
+      navigate('/');
+    }
     getSearchResults(query)
   }
 
-  const getMovies = () => {
+  const getMovies = useCallback(() => {
     if (!searchQuery) {
       dispatch(fetchMovies(ENDPOINT_DISCOVER))
     } else {
       dispatch(fetchMovies(`${ENDPOINT_SEARCH}&query=` + searchQuery))
     }
-  }
+  }, [searchQuery, dispatch])
 
   const viewTrailer = (movie) => {
     getMovie(movie.id)
-    if (!videoKey) setOpen(true)
     setOpen(true)
   }
 
   const getMovie = async (id) => {
     const URL = `${ENDPOINT}/movie/${id}?api_key=${process.env.REACT_APP_API_KEY}&append_to_response=videos`
-    setVideoKey(null)
-    const videoData = await fetch(URL)
-      .then((response) => response.json())
+    try {
+      setVideoKey(null)
+      const response = await fetch(URL);
+      if (!response.ok) {
+        throw new Error('Network response failer');
+      }
 
-    if (videoData.videos && videoData.videos.results.length) {
-      const trailer = videoData.videos.results.find(vid => vid.type === 'Trailer')
-      setVideoKey(trailer ? trailer.key : videoData.videos.results[0].key)
+      const videoData = await response.json();
+      if (videoData.videos && videoData.videos.results.length) {
+        const trailer = videoData.videos.results.find(vid => vid.type === 'Trailer')
+        setVideoKey(trailer ? trailer.key : videoData.videos.results[0].key)
+      }
+    } catch (error) {
+      console.error('Failed to fetch movie data:', error);
     }
   }
 
   useEffect(() => {
     getMovies()
-  }, [])
+  }, [getMovies])
 
   return (
     <div className="App">
       <Header searchMovies={searchMovies} searchParams={searchParams} setSearchParams={setSearchParams} />
 
       <div className="container">
-        {isOpen && 
-        <TrailerModal isOpen={isOpen} closeModal={closeModal} videoKey={videoKey}/>
+        {isOpen &&
+          <TrailerModal isOpen={isOpen} closeModal={closeModal} videoKey={videoKey}/>
         }
 
         <Routes>
-          <Route path="/" element={<Movies movies={movies} viewTrailer={viewTrailer} closeCard={closeCard} />} />
+          <Route path="/" element={<Movies movies={movies} viewTrailer={viewTrailer} />} />
           <Route path="/starred" element={<Starred viewTrailer={viewTrailer} />} />
           <Route path="/watch-later" element={<WatchLater viewTrailer={viewTrailer} />} />
           <Route path="*" element={<h1 className="not-found">Page Not Found</h1>} />
