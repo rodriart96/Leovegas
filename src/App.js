@@ -8,29 +8,29 @@ import Header from './components/Header'
 import Movies from './components/Movies'
 import Starred from './components/Starred'
 import WatchLater from './components/WatchLater'
-import YouTubePlayer from './components/YoutubePlayer'
 import './app.scss'
+import TrailerModal from './components/TrailerModal'
 
 const App = () => {
 
   const state = useSelector((state) => state)
-  const { movies } = state  
+  const { movies } = state
   const dispatch = useDispatch()
   const [searchParams, setSearchParams] = useSearchParams()
   const searchQuery = searchParams.get('search')
   const [videoKey, setVideoKey] = useState(false)
   const [isOpen, setOpen] = useState(false)
   const navigate = useNavigate()
-  
+
   const closeModal = () => setOpen(false)
-  
+
   const closeCard = () => {
 
   }
 
   const getSearchResults = (query) => {
     if (query !== '') {
-      dispatch(fetchMovies(`${ENDPOINT_SEARCH}&query=`+query))
+      dispatch(fetchMovies(`${ENDPOINT_SEARCH}&query=` + query))
       setSearchParams(createSearchParams({ search: query }))
     } else {
       dispatch(fetchMovies(ENDPOINT_DISCOVER))
@@ -47,7 +47,7 @@ const App = () => {
     if (!searchQuery) {
       dispatch(fetchMovies(ENDPOINT_DISCOVER))
     } else {
-      dispatch(fetchMovies(`${ENDPOINT_SEARCH}&query=`+searchQuery))
+      dispatch(fetchMovies(`${ENDPOINT_SEARCH}&query=` + searchQuery))
     }
   }
 
@@ -59,7 +59,6 @@ const App = () => {
 
   const getMovie = async (id) => {
     const URL = `${ENDPOINT}/movie/${id}?api_key=${process.env.REACT_APP_API_KEY}&append_to_response=videos`
-    console.log(URL)
     setVideoKey(null)
     const videoData = await fetch(URL)
       .then((response) => response.json())
@@ -79,13 +78,9 @@ const App = () => {
       <Header searchMovies={searchMovies} searchParams={searchParams} setSearchParams={setSearchParams} />
 
       <div className="container">
-        {videoKey ? (
-          <YouTubePlayer
-            videoKey={videoKey}
-          />
-        ) : (
-          <div style={{padding: "30px"}}><h6>no trailer available. Try another movie</h6></div>
-        )}
+        {isOpen && 
+        <TrailerModal isOpen={isOpen} closeModal={closeModal} videoKey={videoKey}/>
+        }
 
         <Routes>
           <Route path="/" element={<Movies movies={movies} viewTrailer={viewTrailer} closeCard={closeCard} />} />
