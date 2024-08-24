@@ -7,13 +7,19 @@ const watchLaterSlice = createSlice({
     },
     reducers: {
         addToWatchLater: (state, action) => {
-            state.watchLaterMovies = [action.payload, ...state.watchLaterMovies]
+            // Check if the movie is already on the watchLater list
+            const movieAlreadyWatchLater = state.watchLaterMovies.some(movie => movie.id === action.payload.id);
+
+            // If the movie is not already on the watchLater list, add it
+            if (!movieAlreadyWatchLater){
+                state.watchLaterMovies = [action.payload, ...state.watchLaterMovies];
+            }
         },
         removeFromWatchLater: (state, action) => {
-            const indexOfId = state.watchLaterMovies.findIndex(key => key.id === action.payload.id)
+            const indexOfId = state.watchLaterMovies.findIndex(movie => movie.id === action.payload.id)
             state.watchLaterMovies.splice(indexOfId, 1)
         },
-        remveAllWatchLater: (state) => {
+        removeAllWatchLater: (state) => {
             state.watchLaterMovies = []
         },
     },
