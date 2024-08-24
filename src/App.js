@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { Routes, Route, createSearchParams, useSearchParams, useNavigate, useLocation } from "react-router-dom"
 import { useDispatch, useSelector } from 'react-redux'
 import 'reactjs-popup/dist/index.css'
@@ -12,15 +12,12 @@ import './app.scss'
 import TrailerModal from './components/TrailerModal'
 
 const App = () => {
-  const state = useSelector((state) => state)
-  const { movies } = state
-  const currentPage = useSelector((state) => state.movies.currentPage)
-  const dispatch = useDispatch()
   const [searchParams, setSearchParams] = useSearchParams()
-  const searchQuery = searchParams.get('search')
   const [videoKey, setVideoKey] = useState(false)
   const [isOpen, setOpen] = useState(false)
-  const [nextPage, setNextPage] = useState(1);
+  const searchQuery = searchParams.get('search')
+  const { movies } = useSelector((state) => state)
+  const dispatch = useDispatch()
   const navigate = useNavigate()
   const location = useLocation();
 
@@ -41,21 +38,17 @@ const App = () => {
     getSearchResults(query)
   }
 
-  const getMovies = useCallback(async (currentPage) => {
-    if(nextPage === currentPage){
-      setNextPage(currentPage + 1)
-    }
+  const getMovies = useCallback(async (page) => {
     const apiUrl = !searchQuery 
-      ? `${ENDPOINT_DISCOVER}&page=${nextPage}` 
-      : `${ENDPOINT_SEARCH}&query=${searchQuery}&page=${nextPage}`;
-  
+      ? `${ENDPOINT_DISCOVER}&page=${page}` 
+      : `${ENDPOINT_SEARCH}&query=${searchQuery}&page=${page}`;
+      
     try {
-      const response = await dispatch(fetchMovies({ apiUrl, page: nextPage })).unwrap();
-      console.log(response)
+     await dispatch(fetchMovies({ apiUrl, page })).unwrap();
     } catch (error) {
       console.error('Failed to fetch movies:', error);
     }
-  }, [nextPage, searchQuery, dispatch]);
+  }, [searchQuery, dispatch]);
 
   const viewTrailer = (movie) => {
     getMovie(movie.id)
@@ -80,10 +73,6 @@ const App = () => {
       console.error('Failed to fetch movie data:', error);
     }
   }
-
-  useEffect(() => {
-      getMovies(currentPage);
-  }, [currentPage, getMovies]);
   
   return (
     <div className="App">
@@ -96,12 +85,12 @@ const App = () => {
                 <Route 
                     path="/" 
                     element={
-                        <Movies 
+                      <Movies 
                             movies={movies} 
                             viewTrailer={viewTrailer} 
                             closeCard={closeModal}
                             getMovies={getMovies}
-                        />
+                        />                   
                     } 
                 />
                 <Route path="/starred" element={<Starred viewTrailer={viewTrailer} />} />
