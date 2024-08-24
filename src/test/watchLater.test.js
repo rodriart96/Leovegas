@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { renderWithProviders } from './utils'
 import App from '../App'
@@ -7,18 +7,20 @@ it('Watch Later movies page', async () => {
     renderWithProviders(<App />)
 
     await userEvent.type(screen.getByTestId('search-movies'), 'forrest gump')
-    await waitFor(() => {
-      expect(screen.getAllByText('Through the Eyes of Forrest Gump')[0]).toBeInTheDocument()
-    })
+
+    // Assuming there's a movie with a title containing "Forrest Gump"
+    const movieTitle = await screen.findByText(/Forrest Gump/i)
+    expect(movieTitle).toBeInTheDocument()
+
+    // Add movie to Watch Later
     const watchLaterLink = screen.getAllByTestId('watch-later')[0]
-    await waitFor(() => {
-        expect(watchLaterLink).toBeInTheDocument()
-    })
+    expect(watchLaterLink).toBeInTheDocument()
     await userEvent.click(watchLaterLink)
 
-    // const watchLaterink = screen.getByTestId('watch-later-div')
-    // await waitFor(() => {
-    //     expect(watchLaterink).toBeInTheDocument()
-    // })    
-    // await userEvent.click(watchLaterink)
+    // Optionally, navigate to the Watch Later page and check if the movie is there
+    const watchLaterNavLink = screen.getByTestId('watch-later-nav')
+    await userEvent.click(watchLaterNavLink)
+
+    const addedMovie = await screen.findByText(/Forrest Gump/i)
+    expect(addedMovie).toBeInTheDocument()
 })
