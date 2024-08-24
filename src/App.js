@@ -12,29 +12,28 @@ import './app.scss'
 import TrailerModal from './components/TrailerModal'
 
 const App = () => {
-
   const state = useSelector((state) => state)
   const { movies } = state
+  const currentPage = useSelector((state) => state.movies.currentPage)
   const dispatch = useDispatch()
   const [searchParams, setSearchParams] = useSearchParams()
   const searchQuery = searchParams.get('search')
   const [videoKey, setVideoKey] = useState(false)
   const [isOpen, setOpen] = useState(false)
+  const [nextPage, setNextPage] = useState(1);
   const navigate = useNavigate()
   const location = useLocation();
 
   const closeModal = () => setOpen(false)
 
   const getSearchResults = (query) => {
-    if (query !== '') {
-      dispatch(fetchMovies(`${ENDPOINT_SEARCH}&query=` + query))
-      setSearchParams(createSearchParams({ search: query }))
-    } else {
-      dispatch(fetchMovies(ENDPOINT_DISCOVER))
-      setSearchParams()
-    }
+    const apiUrl = query !== '' 
+      ? `${ENDPOINT_SEARCH}&query=${query}` 
+      : ENDPOINT_DISCOVER;
+    dispatch(fetchMovies({ apiUrl, page: 1 }));
+    setSearchParams(createSearchParams({ search: query }));
   }
-
+  
   const searchMovies = (query) => {
     if (location.pathname !== '/') {
       navigate('/');
@@ -42,13 +41,21 @@ const App = () => {
     getSearchResults(query)
   }
 
-  const getMovies = useCallback(() => {
-    if (!searchQuery) {
-      dispatch(fetchMovies(ENDPOINT_DISCOVER))
-    } else {
-      dispatch(fetchMovies(`${ENDPOINT_SEARCH}&query=` + searchQuery))
+  const getMovies = useCallback(async (currentPage) => {
+    if(nextPage === currentPage){
+      setNextPage(currentPage + 1)
     }
-  }, [searchQuery, dispatch])
+    const apiUrl = !searchQuery 
+      ? `${ENDPOINT_DISCOVER}&page=${nextPage}` 
+      : `${ENDPOINT_SEARCH}&query=${searchQuery}&page=${nextPage}`;
+  
+    try {
+      const response = await dispatch(fetchMovies({ apiUrl, page: nextPage })).unwrap();
+      console.log(response)
+    } catch (error) {
+      console.error('Failed to fetch movies:', error);
+    }
+  }, [nextPage, searchQuery, dispatch]);
 
   const viewTrailer = (movie) => {
     getMovie(movie.id)
@@ -75,27 +82,35 @@ const App = () => {
   }
 
   useEffect(() => {
-    getMovies()
-  }, [getMovies])
-
+      getMovies(currentPage);
+  }, [currentPage, getMovies]);
+  
   return (
     <div className="App">
-      <Header searchMovies={searchMovies} searchParams={searchParams} setSearchParams={setSearchParams} />
+        <Header searchMovies={searchMovies} searchParams={searchParams} setSearchParams={setSearchParams} />
 
-      <div className="container">
-        {isOpen &&
-          <TrailerModal isOpen={isOpen} closeModal={closeModal} videoKey={videoKey}/>
-        }
+        <div className="container">
+            {isOpen && <TrailerModal isOpen={isOpen} closeModal={closeModal} videoKey={videoKey}/>}
 
-        <Routes>
-          <Route path="/" element={<Movies movies={movies} viewTrailer={viewTrailer} />} />
-          <Route path="/starred" element={<Starred viewTrailer={viewTrailer} />} />
-          <Route path="/watch-later" element={<WatchLater viewTrailer={viewTrailer} />} />
-          <Route path="*" element={<h1 className="not-found">Page Not Found</h1>} />
-        </Routes>
-      </div>
+            <Routes>
+                <Route 
+                    path="/" 
+                    element={
+                        <Movies 
+                            movies={movies} 
+                            viewTrailer={viewTrailer} 
+                            closeCard={closeModal}
+                            getMovies={getMovies}
+                        />
+                    } 
+                />
+                <Route path="/starred" element={<Starred viewTrailer={viewTrailer} />} />
+                <Route path="/watch-later" element={<WatchLater viewTrailer={viewTrailer} />} />
+                <Route path="*" element={<h1 className="not-found">Page Not Found</h1>} />
+            </Routes>
+        </div>
     </div>
-  )
+)
 }
 
 export default App
