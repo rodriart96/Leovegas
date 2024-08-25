@@ -15,7 +15,7 @@ const WatchLater = ({ viewTrailer }) => {
       {watchLater.watchLaterMovies.length > 0 ?
         (<div data-testid="watch-later-movies" className="starred-movies">
           <h6 className="header">Watch Later List</h6>
-          <div className="row">
+          <div className="movies-flex-container">
             {watchLater.watchLaterMovies.map((movie) => (
               <Movie
                 movie={movie}
@@ -31,7 +31,7 @@ const WatchLater = ({ viewTrailer }) => {
         </div>)
         :
         (<div className="text-center">
-          <i className="bi bi-heart" />
+          <i className="bi bi-card-checklist" />
           <p>You have no movies saved to watch later.</p>
           <p>Go to <Link to='/'>Home</Link></p>
         </div>)}
