@@ -7,6 +7,7 @@ import '../styles/header.scss';
 const Header = ({ searchMovies, searchParams }) => {
   const { starredMovies } = useSelector((state) => state.starred);
   const [inputValue, setInputValue] = useState('');
+  const [typingTimeout, setTypingTimeout] = useState(null);
 
   useEffect(() => {
     setInputValue(searchParams.get('search') || '');
@@ -15,12 +16,24 @@ const Header = ({ searchMovies, searchParams }) => {
   const handleInputChange = (e) => {
     const value = e.target.value;
     setInputValue(value);
-    searchMovies(value);
+
+    if (typingTimeout) {
+      clearTimeout(typingTimeout);
+    }
+
+    const timeout = setTimeout(() => {
+      searchMovies(value);
+    }, 1000);
+
+    setTypingTimeout(timeout);
   };
 
   const handleClearSearch = () => {
     setInputValue('');
     searchMovies('');
+    if (typingTimeout) {
+      clearTimeout(typingTimeout);
+    }
   };
 
   return (
