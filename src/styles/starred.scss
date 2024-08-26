@@ -1,11 +1,14 @@
+.movies-flex-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 32px;
+    padding: 16px;
+    justify-content: center;
+}
 .starred {
   
     footer {
         margin-top: 50px;
-
-        .total-price {
-            font-size: 1.8rem;
-        }
 
         .btn {
             width: auto;

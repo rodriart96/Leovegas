@@ -298,3 +298,11 @@
         background-color: transparent;
     }    
 }
+
+.movies-flex-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 32px;
+    padding: 16px;
+    justify-content: center;
+}
